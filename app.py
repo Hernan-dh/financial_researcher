@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import random
 from datetime import date
 from pathlib import Path
 
@@ -34,6 +35,21 @@ UI_TEXT = {
         "error": "No pude completar esta investigación financiera. Intentá nuevamente.",
     },
 }
+
+COMPANIES = (
+    "Microsoft",
+    "NVIDIA",
+    "Tesla",
+    "Mercado Libre",
+    "Apple",
+    "Amazon",
+    "Alphabet",
+    "Netflix",
+    "Toyota",
+    "Samsung Electronics",
+)
+
+SUGGESTED_COMPANIES = random.sample(COMPANIES, k=3)
 
 
 def header_html(language: str) -> str:
@@ -89,12 +105,25 @@ def research_company(message: str, _history, language: str) -> str:
     return result.raw
 
 
-def research_english(message: str, history) -> str:
-    return research_company(message, history, "English")
+def submit_company(message: str, history: list[dict], language: str):
+    company = (message or "").strip()
+    if not company:
+        return "", history
+    response = research_company(company, history, language)
+    updated_history = [
+        *history,
+        {"role": "user", "content": company},
+        {"role": "assistant", "content": response},
+    ]
+    return "", updated_history
 
 
-def research_spanish(message: str, history) -> str:
-    return research_company(message, history, "Español")
+def submit_english(message: str, history: list[dict]):
+    return submit_company(message, history, "English")
+
+
+def submit_spanish(message: str, history: list[dict]):
+    return submit_company(message, history, "Español")
 
 
 initial = UI_TEXT["English"]
@@ -114,43 +143,53 @@ with gr.Blocks() as demo:
             )
 
     with gr.Group(visible=True) as english_chat:
-        english_textbox = gr.Textbox(
-            placeholder=initial["placeholder"],
-            submit_btn=initial["submit"],
+        english_chatbot = gr.Chatbot(
+            value=[{"role": "assistant", "content": initial["greeting"]}],
             show_label=False,
-            render=False,
+            height=520,
+            elem_id="financial-chat-en",
         )
-        gr.ChatInterface(
-            research_english,
-            chatbot=gr.Chatbot(
-                value=[{"role": "assistant", "content": initial["greeting"]}],
+        gr.Markdown("Examples", elem_classes="company-examples-label")
+        with gr.Row(elem_id="company-examples-en", elem_classes="company-examples"):
+            english_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
+        with gr.Row(elem_id="company-input-row-en", elem_classes="company-input-row"):
+            english_textbox = gr.Textbox(
+                placeholder=initial["placeholder"],
                 show_label=False,
-                height=520,
-                elem_id="financial-chat-en",
-            ),
-            textbox=english_textbox,
-            flagging_mode="never",
-        )
+                container=False,
+                scale=1,
+                elem_id="company-input-en",
+            )
+            english_submit = gr.Button(initial["submit"], variant="primary", scale=0)
+        for button, company in zip(english_buttons, SUGGESTED_COMPANIES):
+            button.click(lambda value=company: value, outputs=english_textbox)
+        english_submit.click(submit_english, [english_textbox, english_chatbot], [english_textbox, english_chatbot])
+        english_textbox.submit(submit_english, [english_textbox, english_chatbot], [english_textbox, english_chatbot])
 
     with gr.Group(visible=False) as spanish_chat:
         spanish = UI_TEXT["Español"]
-        spanish_textbox = gr.Textbox(
-            placeholder=spanish["placeholder"],
-            submit_btn=spanish["submit"],
+        spanish_chatbot = gr.Chatbot(
+            value=[{"role": "assistant", "content": spanish["greeting"]}],
             show_label=False,
-            render=False,
+            height=520,
+            elem_id="financial-chat-es",
         )
-        gr.ChatInterface(
-            research_spanish,
-            chatbot=gr.Chatbot(
-                value=[{"role": "assistant", "content": spanish["greeting"]}],
+        gr.Markdown("Ejemplos", elem_classes="company-examples-label")
+        with gr.Row(elem_id="company-examples-es", elem_classes="company-examples"):
+            spanish_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
+        with gr.Row(elem_id="company-input-row-es", elem_classes="company-input-row"):
+            spanish_textbox = gr.Textbox(
+                placeholder=spanish["placeholder"],
                 show_label=False,
-                height=520,
-                elem_id="financial-chat-es",
-            ),
-            textbox=spanish_textbox,
-            flagging_mode="never",
-        )
+                container=False,
+                scale=1,
+                elem_id="company-input-es",
+            )
+            spanish_submit = gr.Button(spanish["submit"], variant="primary", scale=0)
+        for button, company in zip(spanish_buttons, SUGGESTED_COMPANIES):
+            button.click(lambda value=company: value, outputs=spanish_textbox)
+        spanish_submit.click(submit_spanish, [spanish_textbox, spanish_chatbot], [spanish_textbox, spanish_chatbot])
+        spanish_textbox.submit(submit_spanish, [spanish_textbox, spanish_chatbot], [spanish_textbox, spanish_chatbot])
 
     language.change(
         localized_ui,

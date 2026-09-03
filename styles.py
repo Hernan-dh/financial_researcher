@@ -68,6 +68,50 @@ body {
 #language-selector input { height: 34px !important; min-height: 34px !important; padding: 5px 9px !important; font: 400 11px var(--ui-mono) !important; }
 #language-selector button { width: 34px !important; height: 34px !important; min-height: 34px !important; padding: 0 !important; }
 
+.company-examples,
+.company-examples > div,
+#company-examples-en,
+#company-examples-es,
+#company-examples-en > div,
+#company-examples-es > div {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.company-examples-label,
+.company-examples-label > div,
+.company-examples-label .prose,
+.company-examples-label * {
+  margin: 0 !important;
+  border: 0 !important;
+  background: var(--ui-border) !important;
+  box-shadow: none !important;
+}
+.company-examples-label { margin: 0 !important; padding: 7px 0 !important; }
+.company-examples-label > div,
+.company-examples-label .prose { padding: 0 !important; }
+.company-examples-label p { margin: 0 !important; color: #909690 !important; font: 400 9px var(--ui-mono) !important; letter-spacing: .08em; text-transform: uppercase; }
+.company-examples { gap: 8px !important; margin-bottom: 12px !important; }
+.company-examples button {
+  min-height: 46px !important;
+  height: auto !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--ui-border) !important;
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+  font: 500 12px/1.35 var(--ui-sans) !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+  text-transform: none !important;
+  white-space: normal !important;
+}
+.company-examples button:hover { border-color: var(--ui-acid) !important; color: var(--ui-acid) !important; background: var(--ui-raised) !important; }
+.company-input-row { gap: 0 !important; margin: 0 !important; }
+.company-input-row > div { margin: 0 !important; }
+.company-input-row button { min-width: 118px !important; }
+
 .block, .form { background: transparent !important; box-shadow: none !important; }
 .chatbot, .chatbot *, .block, .form, button, input, textarea { border-radius: 0 !important; }
 .chatbot > .block-label, .chatbot > label, .chatbot .label-wrap, .chatbot .block-label { display: none !important; }
@@ -98,6 +142,7 @@ button.primary, button[variant='primary'], button.submit, button.submit-button, 
   .gradio-container { padding: 22px 14px 34px !important; }
   #title-row { flex-wrap: wrap !important; gap: 16px !important; }
   #language-control { width: 100% !important; max-width: 170px !important; margin-left: 0 !important; }
+  .company-examples { flex-direction: column !important; }
   .financial-headings h1 { font-size: clamp(1.35rem, 8vw, 2rem) !important; }
   #financial-chat-en, #financial-chat-es,
   #financial-chat-en.chatbot, #financial-chat-es.chatbot { height: 500px !important; min-height: 500px !important; box-shadow: 8px 8px 0 rgb(0 0 0 / 18%) !important; }

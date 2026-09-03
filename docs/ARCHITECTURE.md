@@ -31,7 +31,7 @@ Both agents share one CrewAI-compatible fallback LLM. Each model call tries the 
 
 ## Web interface
 
-The Gradio interface defaults to English unless the browser language starts with `es`. Each language has an independent chat presentation, while both execute the same sequential researcher-to-analyst crew. Requests are queued one at a time because the generated report path is shared.
+The Gradio interface defaults to English unless the browser language starts with `es`. Each language has an independent chat presentation and three randomly selected company shortcuts immediately above its input, while both execute the same sequential researcher-to-analyst crew. Requests are queued one at a time because the generated report path is shared.
 
 ## Related decisions
 
