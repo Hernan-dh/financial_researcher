@@ -13,10 +13,14 @@ class FinancialResearcher():
     agents: list[BaseAgent]
     tasks: list[Task]
 
+    def __init__(self, llm):
+        self.llm = llm
+
     @agent
     def researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['researcher'],
+            llm=self.llm,
             verbose=True,
             tools=[SerperDevTool()]
         )
@@ -25,6 +29,7 @@ class FinancialResearcher():
     def analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['analyst'],
+            llm=self.llm,
             verbose=True
         )
 
@@ -52,6 +57,6 @@ class FinancialResearcher():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
-            tracing=True,
+            tracing=False,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

@@ -5,6 +5,7 @@ import warnings
 from datetime import datetime
 
 from financial_researcher.crew import FinancialResearcher
+from financial_researcher.model_provider import fallback_llm
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -23,7 +24,7 @@ def run():
         'current_date': str(datetime.now().date())
     }
     try:
-        FinancialResearcher().crew().kickoff(inputs=inputs)
+        FinancialResearcher(llm=fallback_llm()).crew().kickoff(inputs=inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
@@ -37,7 +38,7 @@ def train():
         'current_year': str(datetime.now().year)
     }
     try:
-        FinancialResearcher().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
+        FinancialResearcher(llm=fallback_llm()).crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
 
     except Exception as e:
         raise Exception(f"An error occurred while training the crew: {e}")
@@ -47,7 +48,7 @@ def replay():
     Replay the crew execution from a specific task.
     """
     try:
-        FinancialResearcher().crew().replay(task_id=sys.argv[1])
+        FinancialResearcher(llm=fallback_llm()).crew().replay(task_id=sys.argv[1])
 
     except Exception as e:
         raise Exception(f"An error occurred while replaying the crew: {e}")
@@ -62,7 +63,7 @@ def test():
     }
 
     try:
-        FinancialResearcher().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
+        FinancialResearcher(llm=fallback_llm()).crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
 
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")
@@ -88,7 +89,7 @@ def run_with_trigger():
     }
 
     try:
-        result = FinancialResearcher().crew().kickoff(inputs=inputs)
+        result = FinancialResearcher(llm=fallback_llm()).crew().kickoff(inputs=inputs)
         return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew with trigger: {e}")

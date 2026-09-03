@@ -3,12 +3,15 @@
 ## Purpose
 
 `financial_researcher` is a CrewAI project whose agents and tasks are configured in YAML and orchestrated from Python.
+The runtime is pinned to CrewAI 1.15.18 for reproducible local and deployed execution.
 
 ## Components
 
 - `src/financial_researcher/config/agents.yaml`: agent roles, goals, and backstories.
 - `src/financial_researcher/config/tasks.yaml`: task descriptions and expected outputs.
 - `src/financial_researcher/crew.py`: CrewAI agent, task, and crew construction.
+- `src/financial_researcher/model_config.py`: version-controlled, quality-ordered model configuration.
+- `src/financial_researcher/model_provider.py`: shared per-call fallback across Gemini, Groq, and OpenRouter.
 - `src/financial_researcher/main.py`: command-line entry points and kickoff inputs.
 - `knowledge/`: versioned knowledge supplied to the crew.
 - `output/` and `sandbox*/`: generated execution artifacts excluded from Git.
@@ -19,6 +22,10 @@
 - Prompts, model responses, tool results, generated code, and generated reports are untrusted.
 - Credentials are loaded from the environment and must not enter Git, prompts, logs, or documentation.
 - CrewAI model and tool providers are external services.
+
+## Model resilience
+
+Both agents share one CrewAI-compatible fallback LLM. Each model call tries the best configured free-tier option in order: Gemini 3.7 Flash, Gemini 3.6 Flash, Groq-hosted GPT-OSS 120B, then OpenRouter-hosted NVIDIA Nemotron 3 Super Free. A provider failure retries only that call and preserves completed task output.
 
 ## Related decisions
 
