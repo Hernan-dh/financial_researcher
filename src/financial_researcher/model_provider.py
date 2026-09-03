@@ -11,7 +11,12 @@ from crewai.utilities.types import LLMMessage
 from dotenv import load_dotenv
 from pydantic import Field
 
-from financial_researcher.model_config import MODEL_FALLBACKS, MODEL_TIMEOUT_SECONDS, ModelSpec
+from financial_researcher.model_config import (
+    MODEL_FALLBACKS,
+    MODEL_MAX_OUTPUT_TOKENS,
+    MODEL_TIMEOUT_SECONDS,
+    ModelSpec,
+)
 
 load_dotenv()
 
@@ -92,6 +97,7 @@ def fallback_llm() -> FallbackLLM:
                     base_url=spec.base_url,
                     provider="openai",
                     max_retries=0,
+                    max_tokens=MODEL_MAX_OUTPUT_TOKENS,
                     timeout=MODEL_TIMEOUT_SECONDS,
                     temperature=0.2,
                 ),

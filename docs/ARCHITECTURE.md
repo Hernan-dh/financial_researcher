@@ -28,6 +28,7 @@ The runtime is pinned to CrewAI 1.15.18 for reproducible local and deployed exec
 ## Model resilience
 
 Both agents share one CrewAI-compatible fallback LLM. Each model call tries the best configured free-tier option in order: Gemini 3.7 Flash, Gemini 3.6 Flash, Groq-hosted GPT-OSS 120B, then OpenRouter-hosted NVIDIA Nemotron 3 Super Free. A provider failure retries only that call and preserves completed task output.
+Financial model calls allow up to 16,384 output tokens so complete reports are not cut off by provider defaults.
 
 ## Web interface
 
