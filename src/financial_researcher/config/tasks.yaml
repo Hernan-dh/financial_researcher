@@ -8,6 +8,7 @@ research_task:
     5. Future outlook and potential developments
     IMPORTANT: your information MUST be up to date and relevant to now, {current_date}.
     Make sure to organize your findings in a structured format with clear sections.
+    {language_instruction}
   expected_output: >
     A comprehensive research document with well-organized sections covering
     all the requested aspects of {company}. Include specific facts, figures,
@@ -23,6 +24,7 @@ analysis_task:
     3. Provide insightful analysis of trends and patterns
     4. Offer a market outlook for company, noting that this should not be used for trading decisions
     5. Be formatted in a professional, easy-to-read style with clear headings
+    {language_instruction}
   expected_output: >
     A polished, professional report on {company} that presents the research
     findings with added analysis and insights. The report should be well-structured

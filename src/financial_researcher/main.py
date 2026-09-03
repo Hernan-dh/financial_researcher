@@ -21,7 +21,8 @@ def run():
     company = input("Enter the company name for research: ")
     inputs = {
         'company': company,
-        'current_date': str(datetime.now().date())
+        'current_date': str(datetime.now().date()),
+        'language_instruction': 'Write the complete research and final report in English.'
     }
     try:
         FinancialResearcher(llm=fallback_llm()).crew().kickoff(inputs=inputs)

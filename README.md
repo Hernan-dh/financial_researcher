@@ -20,7 +20,7 @@ crewai install
 ```
 ### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+Configure at least one model-provider key and `SERPER_API_KEY` in `.env`; see `.env.example`.
 
 - Modify `src/financial_researcher/config/agents.yaml` to define your agents
 - Modify `src/financial_researcher/config/tasks.yaml` to define your tasks
@@ -36,6 +36,12 @@ $ crewai run
 ```
 
 This command initializes the financial_researcher Crew, assembling the agents and assigning them tasks as defined in your configuration.
+
+To run the bilingual Gradio chat:
+
+```bash
+uv run python app.py
+```
 
 This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
 

@@ -13,6 +13,8 @@ The runtime is pinned to CrewAI 1.15.18 for reproducible local and deployed exec
 - `src/financial_researcher/model_config.py`: version-controlled, quality-ordered model configuration.
 - `src/financial_researcher/model_provider.py`: shared per-call fallback across Gemini, Groq, and OpenRouter.
 - `src/financial_researcher/main.py`: command-line entry points and kickoff inputs.
+- `app.py`: bilingual Gradio chat that accepts a company and returns the final CrewAI report.
+- `styles.py`: shared visual language adapted from the Debate interface.
 - `knowledge/`: versioned knowledge supplied to the crew.
 - `output/` and `sandbox*/`: generated execution artifacts excluded from Git.
 - `scripts/`: shared verification, documentation, hook installation, and safe publishing commands.
@@ -26,6 +28,10 @@ The runtime is pinned to CrewAI 1.15.18 for reproducible local and deployed exec
 ## Model resilience
 
 Both agents share one CrewAI-compatible fallback LLM. Each model call tries the best configured free-tier option in order: Gemini 3.7 Flash, Gemini 3.6 Flash, Groq-hosted GPT-OSS 120B, then OpenRouter-hosted NVIDIA Nemotron 3 Super Free. A provider failure retries only that call and preserves completed task output.
+
+## Web interface
+
+The Gradio interface defaults to English unless the browser language starts with `es`. Each language has an independent chat presentation, while both execute the same sequential researcher-to-analyst crew. Requests are queued one at a time because the generated report path is shared.
 
 ## Related decisions
 
