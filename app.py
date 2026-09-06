@@ -121,7 +121,12 @@ def submit_company(message: str, history: list[dict], language: str):
 def finish_submission(history: list[dict], language: str):
     if len(history) < 2 or history[-2]["role"] != "user":
         return gr.Textbox(interactive=True), history, gr.Button(interactive=True)
-    response = research_company(history[-2]["content"], history[:-2], language)
+    content = history[-2]["content"]
+    # Gradio 6 normalizes Chatbot input into typed content blocks.
+    message = content if isinstance(content, str) else "\n".join(
+        block["text"] for block in content if block.get("type") == "text"
+    )
+    response = research_company(message, history[:-2], language)
     return gr.Textbox(interactive=True), [
         *history[:-1],
         {"role": "assistant", "content": response},
