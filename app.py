@@ -106,16 +106,26 @@ def research_company(message: str, _history, language: str) -> str:
 
 
 def submit_company(message: str, history: list[dict], language: str):
-    company = (message or "").strip()
-    if not company:
-        return "", history
-    response = research_company(company, history, language)
-    updated_history = [
-        *history,
-        {"role": "user", "content": company},
+    """Render the user turn before the queued research starts."""
+    message = (message or "").strip()
+    if not message:
+        raise gr.Error("Ingresá una empresa." if language == "Español" else "Enter a company.")
+    status = "Ejecutando la investigación financiera y preparando el informe de la empresa…" if language == "Español" else "Running financial research and preparing the company report…"
+    return gr.Textbox(value="", interactive=False), [
+        *(history or []),
+        {"role": "user", "content": message},
+        {"role": "assistant", "content": status},
+    ], gr.Button(interactive=False)
+
+
+def finish_submission(history: list[dict], language: str):
+    if len(history) < 2 or history[-2]["role"] != "user":
+        return gr.Textbox(interactive=True), history, gr.Button(interactive=True)
+    response = research_company(history[-2]["content"], history[:-2], language)
+    return gr.Textbox(interactive=True), [
+        *history[:-1],
         {"role": "assistant", "content": response},
-    ]
-    return "", updated_history
+    ], gr.Button(interactive=True)
 
 
 def submit_english(message: str, history: list[dict]):
@@ -124,6 +134,14 @@ def submit_english(message: str, history: list[dict]):
 
 def submit_spanish(message: str, history: list[dict]):
     return submit_company(message, history, "Español")
+
+
+def finish_english(history: list[dict]):
+    return finish_submission(history, "English")
+
+
+def finish_spanish(history: list[dict]):
+    return finish_submission(history, "Español")
 
 
 initial = UI_TEXT["English"]
@@ -163,8 +181,20 @@ with gr.Blocks() as demo:
             english_submit = gr.Button(initial["submit"], variant="primary", scale=0)
         for button, company in zip(english_buttons, SUGGESTED_COMPANIES):
             button.click(lambda value=company: value, outputs=english_textbox)
-        english_submit.click(submit_english, [english_textbox, english_chatbot], [english_textbox, english_chatbot])
-        english_textbox.submit(submit_english, [english_textbox, english_chatbot], [english_textbox, english_chatbot])
+        english_submit.click(
+            submit_english, [english_textbox, english_chatbot],
+            [english_textbox, english_chatbot, english_submit], queue=False,
+        ).success(
+            finish_english, english_chatbot,
+            [english_textbox, english_chatbot, english_submit], show_progress="hidden",
+        )
+        english_textbox.submit(
+            submit_english, [english_textbox, english_chatbot],
+            [english_textbox, english_chatbot, english_submit], queue=False,
+        ).success(
+            finish_english, english_chatbot,
+            [english_textbox, english_chatbot, english_submit], show_progress="hidden",
+        )
 
     with gr.Group(visible=False) as spanish_chat:
         spanish = UI_TEXT["Español"]
@@ -188,8 +218,20 @@ with gr.Blocks() as demo:
             spanish_submit = gr.Button(spanish["submit"], variant="primary", scale=0)
         for button, company in zip(spanish_buttons, SUGGESTED_COMPANIES):
             button.click(lambda value=company: value, outputs=spanish_textbox)
-        spanish_submit.click(submit_spanish, [spanish_textbox, spanish_chatbot], [spanish_textbox, spanish_chatbot])
-        spanish_textbox.submit(submit_spanish, [spanish_textbox, spanish_chatbot], [spanish_textbox, spanish_chatbot])
+        spanish_submit.click(
+            submit_spanish, [spanish_textbox, spanish_chatbot],
+            [spanish_textbox, spanish_chatbot, spanish_submit], queue=False,
+        ).success(
+            finish_spanish, spanish_chatbot,
+            [spanish_textbox, spanish_chatbot, spanish_submit], show_progress="hidden",
+        )
+        spanish_textbox.submit(
+            submit_spanish, [spanish_textbox, spanish_chatbot],
+            [spanish_textbox, spanish_chatbot, spanish_submit], queue=False,
+        ).success(
+            finish_spanish, spanish_chatbot,
+            [spanish_textbox, spanish_chatbot, spanish_submit], show_progress="hidden",
+        )
 
     language.change(
         localized_ui,

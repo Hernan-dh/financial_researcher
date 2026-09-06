@@ -149,6 +149,13 @@ button.primary, button[variant='primary'], button.submit, button.submit-button, 
 }
 """
 
+CSS += r"""
+.gradio-container .message-row.user-row .message *,
+.gradio-container .message-row[data-role='user'] .message * {
+    color: #111412 !important;
+}
+"""
+
 JS = r"""
 () => {
   document.title = (navigator.language || '').toLowerCase().startsWith('es') ? 'Investigación financiera' : 'Financial Research';
