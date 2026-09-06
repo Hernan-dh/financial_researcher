@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import os
 import random
+import queue
+import threading
 from datetime import date
 from pathlib import Path
 
 import gradio as gr
-from report_export import download_controls, prepare_with_downloads, finish_with_downloads
+from report_export import download_controls, prepare_with_downloads, finish_with_downloads, finish_with_progress_downloads
 from dotenv import load_dotenv
 
 from financial_researcher.crew import FinancialResearcher
@@ -26,7 +28,7 @@ UI_TEXT = {
         "submit": "Research",
         "instruction": "Write the complete research and final report in English.",
         "error": "I couldn't complete this financial research. Please try again.",
-        "status": "**Pipeline running**\n\n1. **Financial Researcher** is using **Serper web search** to collect current company evidence.\n2. **Financial Analyst** will evaluate the findings and write the final report.",
+        "status": "**Financial Researcher** is using **Serper web search** to collect current company evidence.",
     },
     "Español": {
         "subtitle": "INTELIGENCIA DE MERCADO MULTIAGENTE",
@@ -35,7 +37,7 @@ UI_TEXT = {
         "submit": "Investigar",
         "instruction": "Escribí la investigación y el informe final completos en español.",
         "error": "No pude completar esta investigación financiera. Intentá nuevamente.",
-        "status": "**Flujo en ejecución**\n\n1. **Financial Researcher** está usando la **búsqueda web de Serper** para reunir evidencia actual de la empresa.\n2. **Financial Analyst** evaluará los hallazgos y redactará el informe final.",
+        "status": "**Financial Researcher** está usando la **búsqueda web de Serper** para reunir evidencia actual de la empresa.",
     },
 }
 
@@ -86,7 +88,7 @@ def initialize_language(browser_language: str):
     return language, header, english_group, spanish_group
 
 
-def research_company(message: str, _history, language: str) -> str:
+def research_company(message: str, _history, language: str, task_callback=None) -> str:
     language = language if language in UI_TEXT else "English"
     text = UI_TEXT[language]
     company = (message or "").strip()
@@ -94,7 +96,7 @@ def research_company(message: str, _history, language: str) -> str:
         return text["greeting"]
 
     try:
-        result = FinancialResearcher(llm=fallback_llm()).crew().kickoff(
+        result = FinancialResearcher(llm=fallback_llm(), task_callback=task_callback).crew().kickoff(
             inputs={
                 "company": company,
                 "current_date": date.today().isoformat(),
@@ -136,6 +138,41 @@ def finish_submission(history: list[dict], language: str):
     ], gr.Button(interactive=True)
 
 
+def finish_submission_progress(history: list[dict], language: str):
+    """Stream task-completion updates into the pending Gradio chat response."""
+    if len(history) < 2 or history[-2]["role"] != "user":
+        yield gr.Textbox(interactive=True), history, gr.Button(interactive=True), True
+        return
+    content = history[-2]["content"]
+    company = content if isinstance(content, str) else "\n".join(block["text"] for block in content if block.get("type") == "text")
+    text = UI_TEXT[language]
+    updates = queue.Queue()
+    stages = [
+        "**Financial Analyst** is evaluating the collected evidence and writing the company report.",
+        "**Financial Analyst** está evaluando la evidencia reunida y redactando el informe de la empresa.",
+    ]
+    callback_count = 0
+    def on_task_complete(_output):
+        nonlocal callback_count
+        callback_count += 1
+        if callback_count == 1:
+            updates.put((stages[1] if language == "Español" else stages[0], False))
+    def work():
+        try:
+            updates.put((research_company(company, history[:-2], language, task_callback=on_task_complete), True))
+        except Exception as error:
+            print(f"[web] financial research failed ({type(error).__name__})", flush=True)
+            updates.put((text["error"], True))
+    thread = threading.Thread(target=work, daemon=True)
+    thread.start()
+    while thread.is_alive() or not updates.empty():
+        try:
+            update, completed = updates.get(timeout=0.1)
+        except queue.Empty:
+            continue
+        yield gr.Textbox(interactive=completed), [*history[:-1], {"role": "assistant", "content": update}], gr.Button(interactive=completed), completed
+
+
 def submit_english(message: str, history: list[dict]):
     return submit_company(message, history, "English")
 
@@ -148,8 +185,16 @@ def finish_english(history: list[dict]):
     return finish_submission(history, "English")
 
 
+def finish_english_progress(history: list[dict]):
+    yield from finish_submission_progress(history, "English")
+
+
 def finish_spanish(history: list[dict]):
     return finish_submission(history, "Español")
+
+
+def finish_spanish_progress(history: list[dict]):
+    yield from finish_submission_progress(history, "Español")
 
 
 initial = UI_TEXT["English"]
@@ -194,14 +239,14 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
             prepare_with_downloads(submit_english), [english_textbox, english_chatbot],
             [english_textbox, english_chatbot, english_submit, english_report, english_download], queue=False,
         ).success(
-            finish_with_downloads(finish_english, UI_TEXT["English"]["error"]), english_chatbot,
+            finish_with_progress_downloads(finish_english_progress, UI_TEXT["English"]["error"]), english_chatbot,
             [english_textbox, english_chatbot, english_submit, english_report, english_download], show_progress="hidden",
         )
         english_textbox.submit(
             prepare_with_downloads(submit_english), [english_textbox, english_chatbot],
             [english_textbox, english_chatbot, english_submit, english_report, english_download], queue=False,
         ).success(
-            finish_with_downloads(finish_english, UI_TEXT["English"]["error"]), english_chatbot,
+            finish_with_progress_downloads(finish_english_progress, UI_TEXT["English"]["error"]), english_chatbot,
             [english_textbox, english_chatbot, english_submit, english_report, english_download], show_progress="hidden",
         )
 
@@ -232,14 +277,14 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
             prepare_with_downloads(submit_spanish), [spanish_textbox, spanish_chatbot],
             [spanish_textbox, spanish_chatbot, spanish_submit, spanish_report, spanish_download], queue=False,
         ).success(
-            finish_with_downloads(finish_spanish, UI_TEXT["Español"]["error"]), spanish_chatbot,
+            finish_with_progress_downloads(finish_spanish_progress, UI_TEXT["Español"]["error"]), spanish_chatbot,
             [spanish_textbox, spanish_chatbot, spanish_submit, spanish_report, spanish_download], show_progress="hidden",
         )
         spanish_textbox.submit(
             prepare_with_downloads(submit_spanish), [spanish_textbox, spanish_chatbot],
             [spanish_textbox, spanish_chatbot, spanish_submit, spanish_report, spanish_download], queue=False,
         ).success(
-            finish_with_downloads(finish_spanish, UI_TEXT["Español"]["error"]), spanish_chatbot,
+            finish_with_progress_downloads(finish_spanish_progress, UI_TEXT["Español"]["error"]), spanish_chatbot,
             [spanish_textbox, spanish_chatbot, spanish_submit, spanish_report, spanish_download], show_progress="hidden",
         )
 
