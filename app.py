@@ -214,13 +214,13 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
             )
 
     with gr.Group(visible=True) as english_chat:
+        english_report, english_download = download_controls("English")
         english_chatbot = gr.Chatbot(
             value=[{"role": "assistant", "content": initial["greeting"]}],
             show_label=False,
             height=520,
             elem_id="financial-chat-en",
         )
-        english_report, english_download = download_controls("English")
         gr.Markdown("Examples", elem_classes="company-examples-label")
         with gr.Row(elem_id="company-examples-en", elem_classes="company-examples"):
             english_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
@@ -251,6 +251,7 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
         )
 
     with gr.Group(visible=False) as spanish_chat:
+        spanish_report, spanish_download = download_controls("Español")
         spanish = UI_TEXT["Español"]
         spanish_chatbot = gr.Chatbot(
             value=[{"role": "assistant", "content": spanish["greeting"]}],
@@ -258,7 +259,6 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
             height=520,
             elem_id="financial-chat-es",
         )
-        spanish_report, spanish_download = download_controls("Español")
         gr.Markdown("Ejemplos", elem_classes="company-examples-label")
         with gr.Row(elem_id="company-examples-es", elem_classes="company-examples"):
             spanish_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
