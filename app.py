@@ -26,6 +26,7 @@ UI_TEXT = {
         "submit": "Research",
         "instruction": "Write the complete research and final report in English.",
         "error": "I couldn't complete this financial research. Please try again.",
+        "status": "**Pipeline running**\n\n1. **Financial Researcher** is using **Serper web search** to collect current company evidence.\n2. **Financial Analyst** will evaluate the findings and write the final report.",
     },
     "Español": {
         "subtitle": "INTELIGENCIA DE MERCADO MULTIAGENTE",
@@ -34,6 +35,7 @@ UI_TEXT = {
         "submit": "Investigar",
         "instruction": "Escribí la investigación y el informe final completos en español.",
         "error": "No pude completar esta investigación financiera. Intentá nuevamente.",
+        "status": "**Flujo en ejecución**\n\n1. **Financial Researcher** está usando la **búsqueda web de Serper** para reunir evidencia actual de la empresa.\n2. **Financial Analyst** evaluará los hallazgos y redactará el informe final.",
     },
 }
 
@@ -111,7 +113,7 @@ def submit_company(message: str, history: list[dict], language: str):
     message = (message or "").strip()
     if not message:
         raise gr.Error("Ingresá una empresa." if language == "Español" else "Enter a company.")
-    status = "Ejecutando la investigación financiera y preparando el informe de la empresa…" if language == "Español" else "Running financial research and preparing the company report…"
+    status = UI_TEXT[language if language in UI_TEXT else "English"]["status"]
     return gr.Textbox(value="", interactive=False), [
         *(history or []),
         {"role": "user", "content": message},
