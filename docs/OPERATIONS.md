@@ -38,6 +38,8 @@ Provide `--title` and `--description` to avoid external metadata generation. Com
 
 Gradio 6 represents Chatbot input content as typed blocks. The submission handler extracts text before calling the research backend. When checking chat changes, round-trip history through Chatbot.postprocess and Chatbot.preprocess; testing only plain string dictionaries misses this conversion.
 
+Final reports are validated twice: the CrewAI analysis task retries drafts that lack readable content, Markdown sections, or source URLs, and the web boundary rejects non-text or decorative-only output. A rejected result is shown as the localized generic error and is not made downloadable.
+
 ## Public-source verification
 
 See [README](../README.md) for the reproducible setup. CI installs dependencies before invoking the verifier. Tests disable dotenv loading and provider telemetry and use synthetic inputs or mocked external calls; passing unit tests does not certify live services or production security.

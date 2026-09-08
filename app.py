@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import random
 import queue
+import re
 import threading
 from datetime import date
 from pathlib import Path
@@ -48,6 +49,19 @@ COMPANIES = (
     "Amazon", "Alphabet", "Netflix", "Toyota", "Samsung Electronics",
 )
 SUGGESTED_COMPANIES = random.sample(COMPANIES, k=3)
+
+
+def normalize_report(markdown: object) -> str:
+    """Return displayable Markdown and fail closed on empty/decorative output."""
+    if not isinstance(markdown, str):
+        raise ValueError("The financial report is not text")
+    report = markdown.strip()
+    fenced = re.fullmatch(r"```(?:markdown|md)?\s*\n(?P<body>[\s\S]*?)\n```", report, re.IGNORECASE)
+    if fenced:
+        report = fenced.group("body").strip()
+    if len(re.sub(r"[^\w]+", "", report, flags=re.UNICODE)) < 100:
+        raise ValueError("The financial report has no readable content")
+    return report
 
 
 def header_html(language: str) -> str:
@@ -96,7 +110,11 @@ def research_company(message: str, _history, language: str, task_callback=None) 
     except Exception as error:
         print(f"[web] financial research failed ({type(error).__name__})", flush=True)
         return text["error"]
-    return result.raw
+    try:
+        return normalize_report(result.raw)
+    except ValueError as error:
+        print(f"[web] invalid financial report ({error})", flush=True)
+        return text["error"]
 
 
 def submit_company(message: str, history: list[dict], language: str):

@@ -61,6 +61,22 @@ class ChatTests(unittest.TestCase):
         self.assertTrue(button.interactive)
         self.assertEqual(history[-1]["content"], app.UI_TEXT["English"]["error"])
 
+    def test_normalize_report_unwraps_markdown_fence(self):
+        report = "# Summary\n\n" + ("Evidence and analysis. " * 8)
+        self.assertEqual(app.normalize_report(f"```markdown\n{report}\n```"), report.strip())
+
+    def test_normalize_report_rejects_decorative_empty_output(self):
+        with self.assertRaises(ValueError):
+            app.normalize_report("| |\n| --- |\n| |")
+
+    def test_invalid_backend_output_becomes_localized_error(self):
+        crew = unittest.mock.MagicMock()
+        crew.crew.return_value.kickoff.return_value.raw = "| |\n| --- |\n| |"
+        with patch.object(app, "fallback_llm", return_value=object()), patch.object(
+            app, "FinancialResearcher", return_value=crew
+        ):
+            self.assertEqual(app.research_company("Example", [], "English"), app.UI_TEXT["English"]["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
