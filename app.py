@@ -1,4 +1,4 @@
-"""Gradio web interface for the CrewAI financial researcher."""
+"""Bilingual Gradio interface for the CrewAI financial researcher."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ UI_TEXT = {
         "submit": "Research",
         "instruction": "Write the complete research and final report in English.",
         "error": "I couldn't complete this financial research. Please try again.",
+        "examples": "Example companies",
         "status": "**Financial Researcher** is using **Serper web search** to collect current company evidence.",
     },
     "Español": {
@@ -37,23 +38,15 @@ UI_TEXT = {
         "submit": "Investigar",
         "instruction": "Escribí la investigación y el informe final completos en español.",
         "error": "No pude completar esta investigación financiera. Intentá nuevamente.",
+        "examples": "Empresas de ejemplo",
         "status": "**Financial Researcher** está usando la **búsqueda web de Serper** para reunir evidencia actual de la empresa.",
     },
 }
 
 COMPANIES = (
-    "Microsoft",
-    "NVIDIA",
-    "Tesla",
-    "Mercado Libre",
-    "Apple",
-    "Amazon",
-    "Alphabet",
-    "Netflix",
-    "Toyota",
-    "Samsung Electronics",
+    "Microsoft", "NVIDIA", "Tesla", "Mercado Libre", "Apple",
+    "Amazon", "Alphabet", "Netflix", "Toyota", "Samsung Electronics",
 )
-
 SUGGESTED_COMPANIES = random.sample(COMPANIES, k=3)
 
 
@@ -94,19 +87,15 @@ def research_company(message: str, _history, language: str, task_callback=None) 
     company = (message or "").strip()
     if not company:
         return text["greeting"]
-
     try:
-        result = FinancialResearcher(llm=fallback_llm(), task_callback=task_callback).crew().kickoff(
-            inputs={
-                "company": company,
-                "current_date": date.today().isoformat(),
-                "language_instruction": text["instruction"],
-            }
-        )
+        result = FinancialResearcher(llm=fallback_llm(), task_callback=task_callback).crew().kickoff(inputs={
+            "company": company,
+            "current_date": date.today().isoformat(),
+            "language_instruction": text["instruction"],
+        })
     except Exception as error:
         print(f"[web] financial research failed ({type(error).__name__})", flush=True)
         return text["error"]
-
     return result.raw
 
 
@@ -147,16 +136,17 @@ def finish_submission_progress(history: list[dict], language: str):
     company = content if isinstance(content, str) else "\n".join(block["text"] for block in content if block.get("type") == "text")
     text = UI_TEXT[language]
     updates = queue.Queue()
-    stages = [
-        "**Financial Analyst** is evaluating the collected evidence and writing the company report.",
-        "**Financial Analyst** está evaluando la evidencia reunida y redactando el informe de la empresa.",
-    ]
+    stage = (
+        "**Financial Analyst** is evaluating the collected evidence and writing the company report."
+        if language == "English" else
+        "**Financial Analyst** está evaluando la evidencia reunida y redactando el informe de la empresa."
+    )
     callback_count = 0
     def on_task_complete(_output):
         nonlocal callback_count
         callback_count += 1
         if callback_count == 1:
-            updates.put((stages[1] if language == "Español" else stages[0], False))
+            updates.put((stage, False))
     def work():
         try:
             updates.put((research_company(company, history[:-2], language, task_callback=on_task_complete), True))
@@ -205,32 +195,23 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
         with gr.Column(scale=0, min_width=180, elem_id="language-control"):
             gr.Markdown("Idioma / Language:", elem_id="language-label")
             language = gr.Dropdown(
-                choices=["Español", "English"],
-                value="English",
-                show_label=False,
-                container=False,
-                interactive=True,
-                elem_id="language-selector",
+                choices=["Español", "English"], value="English", show_label=False,
+                container=False, interactive=True, elem_id="language-selector",
             )
 
     with gr.Group(visible=True) as english_chat:
-        english_report, english_download = download_controls("English")
         english_chatbot = gr.Chatbot(
             value=[{"role": "assistant", "content": initial["greeting"]}],
-            show_label=False,
-            height=520,
-            elem_id="financial-chat-en",
+            show_label=False, height=520, elem_id="financial-chat-en",
         )
-        gr.Markdown("Examples", elem_classes="company-examples-label")
+        english_report, english_download = download_controls("English")
+        gr.Markdown(initial["examples"], elem_classes="company-examples-label")
         with gr.Row(elem_id="company-examples-en", elem_classes="company-examples"):
             english_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
         with gr.Row(elem_id="company-input-row-en", elem_classes="company-input-row"):
             english_textbox = gr.Textbox(
-                placeholder=initial["placeholder"],
-                show_label=False,
-                container=False,
-                scale=1,
-                elem_id="company-input-en",
+                placeholder=initial["placeholder"], show_label=False, container=False,
+                scale=1, elem_id="company-input-en",
             )
             english_submit = gr.Button(initial["submit"], variant="primary", scale=0)
         for button, company in zip(english_buttons, SUGGESTED_COMPANIES):
@@ -251,24 +232,19 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
         )
 
     with gr.Group(visible=False) as spanish_chat:
-        spanish_report, spanish_download = download_controls("Español")
         spanish = UI_TEXT["Español"]
         spanish_chatbot = gr.Chatbot(
             value=[{"role": "assistant", "content": spanish["greeting"]}],
-            show_label=False,
-            height=520,
-            elem_id="financial-chat-es",
+            show_label=False, height=520, elem_id="financial-chat-es",
         )
-        gr.Markdown("Ejemplos", elem_classes="company-examples-label")
+        spanish_report, spanish_download = download_controls("Español")
+        gr.Markdown(spanish["examples"], elem_classes="company-examples-label")
         with gr.Row(elem_id="company-examples-es", elem_classes="company-examples"):
             spanish_buttons = [gr.Button(company) for company in SUGGESTED_COMPANIES]
         with gr.Row(elem_id="company-input-row-es", elem_classes="company-input-row"):
             spanish_textbox = gr.Textbox(
-                placeholder=spanish["placeholder"],
-                show_label=False,
-                container=False,
-                scale=1,
-                elem_id="company-input-es",
+                placeholder=spanish["placeholder"], show_label=False, container=False,
+                scale=1, elem_id="company-input-es",
             )
             spanish_submit = gr.Button(spanish["submit"], variant="primary", scale=0)
         for button, company in zip(spanish_buttons, SUGGESTED_COMPANIES):
@@ -289,16 +265,12 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
         )
 
     language.change(
-        localized_ui,
-        inputs=language,
-        outputs=[header, english_chat, spanish_chat],
+        localized_ui, inputs=language, outputs=[header, english_chat, spanish_chat],
         js="(language) => { document.title = language === 'Español' ? 'Investigación financiera' : 'Financial Research'; return language; }",
     )
     browser_language = gr.Textbox(visible=False)
     demo.load(
-        initialize_language,
-        inputs=browser_language,
-        outputs=[language, header, english_chat, spanish_chat],
+        initialize_language, inputs=browser_language, outputs=[language, header, english_chat, spanish_chat],
         js="() => navigator.language || ''",
     )
 
