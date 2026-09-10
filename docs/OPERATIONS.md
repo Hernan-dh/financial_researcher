@@ -9,6 +9,10 @@
 
 For the web interface, run `uv run python app.py` and open `http://127.0.0.1:7860`. Override the port with `PORT`; production services must expose that same environment-provided port.
 
+## Follow-up conversation
+
+After a completed report, ordinary chat messages are answered only from that report and do not fetch current market data. Use `/new-report <company>` to begin a new research run.
+
 Generated files in `output/` and `sandbox*/` are local artifacts and are excluded from publication.
 
 Runtime model names and their order are committed in `src/financial_researcher/model_config.py`; credentials remain only in the environment. Logs show each provider attempt without exposing keys. If a provider fails, the current LLM call moves to the next configured model without restarting completed tasks.
