@@ -323,12 +323,12 @@ with gr.Blocks(delete_cache=(3600, 86400)) as demo:
 
     language.change(
         localized_ui, inputs=language, outputs=[header, english_chat, spanish_chat],
-        js="(language) => { document.title = language === 'Español' ? 'Investigación financiera' : 'Financial Research'; return language; }",
+            js="(language) => { if (window.__financialResearcherAutoLanguage) delete window.__financialResearcherAutoLanguage; else try { localStorage.setItem('financial-researcher-language', language); } catch {} document.title = language === 'Español' ? 'Investigación financiera' : 'Financial Research'; return language; }",
     )
     browser_language = gr.Textbox(visible=False)
     demo.load(
         initialize_language, inputs=browser_language, outputs=[language, header, english_chat, spanish_chat],
-        js="() => navigator.language || ''",
+        js="() => { try { const saved = localStorage.getItem('financial-researcher-language'); if (saved === 'Español' || saved === 'English') return saved; } catch {} window.__financialResearcherAutoLanguage = true; return navigator.language || ''; }",
     )
 
 demo.queue(default_concurrency_limit=1)
