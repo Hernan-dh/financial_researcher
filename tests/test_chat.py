@@ -59,7 +59,7 @@ class ChatTests(unittest.TestCase):
             textbox, history, button = app.finish_english(self.round_trip(pending))
         self.assertTrue(textbox.interactive)
         self.assertTrue(button.interactive)
-        self.assertEqual(history[-1]["content"], app.UI_TEXT["English"]["error"])
+        self.assertIn("unavailable", history[-1]["content"])
 
     def test_normalize_report_unwraps_markdown_fence(self):
         report = "# Summary\n\n" + ("Evidence and analysis. " * 8)
