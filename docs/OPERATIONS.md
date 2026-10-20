@@ -17,6 +17,10 @@ Generated files in `output/` and `sandbox*/` are local artifacts and are exclude
 
 Runtime model names and their order are committed in `src/financial_researcher/model_config.py`; credentials remain only in the environment. Logs show each provider attempt without exposing keys. If a provider fails, the current LLM call moves to the next configured model without restarting completed tasks.
 
+## Phoenix tracing
+
+Tracing is opt-in. Set `PHOENIX_COLLECTOR_ENDPOINT` to a Phoenix OTLP endpoint and, when required, `PHOENIX_API_KEY`. The entry point instruments CrewAI through OpenInference; leaving the endpoint unset sends no traces.
+
 ## Verification
 
 Run `./scripts/verify.sh`, or on Windows run `uv run python scripts/verify.py`.

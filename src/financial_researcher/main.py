@@ -4,10 +4,13 @@ import warnings
 
 from datetime import datetime
 
+from financial_researcher.observability import configure_observability
 from financial_researcher.crew import FinancialResearcher
 from financial_researcher.model_provider import fallback_llm
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+configure_observability()
 
 # This main file is intended to be a way for you to run your
 # crew locally, so refrain from adding unnecessary logic into this file.
